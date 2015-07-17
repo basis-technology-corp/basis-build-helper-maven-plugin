@@ -63,18 +63,16 @@ public class OsgiVersionMojo extends AbstractMojo {
     String propertyName;
 
     public void execute() throws MojoExecutionException {
-        boolean snapshot;
+        boolean snapshot = project.getVersion().endsWith("-SNAPSHOT");
         String result;
 
         Matcher matcher = CXX_PATTERN.matcher(project.getVersion());
         if (matcher.matches()) {
             result = String.format("%s.%s.%s", matcher.group(1), matcher.group(2), matcher.group(3));
-            snapshot = matcher.groupCount() > 3;
         } else {
             matcher = PLAIN_PATTERN.matcher(project.getVersion());
             if (matcher.matches()) {
                 result = String.format("%s.%s.%s", matcher.group(1), matcher.group(2), matcher.group(3));
-                snapshot = matcher.groupCount() > 3;
             } else {
                 throw new MojoExecutionException(String.format("Version %s does not match either x.y.z or x.y.z.cXX.Y",
                         project.getVersion()));

@@ -1,5 +1,5 @@
 Properties properties = new Properties()
-File propertiesFile = new File('target/it/simple-it/target/app.properties')
+File propertiesFile = new File('target/it/non-snapshot-qualifier-it/target/app.properties')
 System.err.println(propertiesFile.getAbsolutePath())
 propertiesFile.withInputStream {
     properties.load(it)

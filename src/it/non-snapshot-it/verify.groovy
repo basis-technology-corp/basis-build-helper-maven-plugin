@@ -1,6 +1,6 @@
 Properties properties = new Properties()
-File propertiesFile = new File('target/it/simple-it/target/app.properties')
-System.err.println(propertiesFile.getAbsolutePath())
+File propertiesFile = new File('target/it/non-snapshot-it/target/app.properties')
+
 propertiesFile.withInputStream {
     properties.load(it)
 }
@@ -8,7 +8,6 @@ propertiesFile.withInputStream {
 def runtimeString = 'osgi-version'
 def val = properties."$runtimeString"
 
-def matcher = (val =~ ~/1\.0\.2/)
-assert matcher.matches()
+assert val.equals("1.0.2")
 
 
