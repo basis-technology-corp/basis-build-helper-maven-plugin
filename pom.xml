@@ -3,7 +3,7 @@
 
     <groupId>com.basistech</groupId>
     <artifactId>bbh-maven-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <parent>
@@ -21,7 +21,7 @@
     <scm>
         <connection>scm:git:git@git.basistech.net:textanalytics/basis-build-helper-maven-plugin.git</connection>
         <developerConnection>scm:git:git@git.basistech.net:textanalytics/basis-build-helper-maven-plugin.git</developerConnection>
-        <tag>bbh-maven-plugin-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <site>
