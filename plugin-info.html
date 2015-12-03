@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="Date-Revision-yyyymmdd" content="20151203" />
     <meta http-equiv="Content-Language" content="en" />
-    <title>bbh-maven-plugin &#x2013; Plugin Documentation</title>
+    <title>Autogen code generator &#x2013; Plugin Documentation</title>
     <link rel="stylesheet" href="./css/apache-maven-fluido-1.3.1.min.css" />
     <link rel="stylesheet" href="./css/site.css" />
     <link rel="stylesheet" href="./css/print.css" media="print" />
@@ -27,7 +27,7 @@
           <div id="banner">
         <div class="pull-left">
                                 <div id="bannerLeft">
-                <h2>bbh-maven-plugin</h2>
+                <h2>Autogen code generator</h2>
                 </div>
                       </div>
         <div class="pull-right">  </div>
@@ -41,7 +41,7 @@
                   <li id="publishDate">Last Published: 2015-12-03
                       <span class="divider">|</span>
                    </li>
-                  <li id="projectVersion">Version: 1.0.2-SNAPSHOT
+                  <li id="projectVersion">Version: 6
                       </li>
                       
                 
@@ -121,16 +121,8 @@
 <th>Goal</th>
 <th>Description</th></tr>
 <tr class="b">
-<td><a href="help-mojo.html">bbh:help</a></td>
-<td>Display help information on bbh-maven-plugin.<br />
-Call <code>mvn basis-build-helper-plugin:help -Ddetail=true
--Dgoal=&lt;goal-name&gt;</code> to display parameter details.</td></tr>
-<tr class="a">
-<td><a href="osgi-version-mojo.html">bbh:osgi-version</a></td>
-<td>Transform a maven version to an OSGi version, dealing, as needed,
-with the Basis convention of x.y.z.cXX.Y{-SNAPSHOT}. So, we deal
-with the following cases: x.y.z(-SNAPSHOT) x.y.z.cXX.Y(-SNAPSHOT)
-Anything else is an error.</td></tr></table>
+<td><a href="generate-mojo.html">autogen:generate</a></td>
+<td>No description.</td></tr></table>
 <div class="section">
 <h3><a name="System_Requirements"></a>System Requirements</h3><a name="System_Requirements"></a>
 <p>The following specifies the minimum requirements to run this Maven plugin:</p>
@@ -158,9 +150,9 @@ Anything else is an error.</td></tr></table>
     &lt;pluginManagement&gt;
       &lt;plugins&gt;
         &lt;plugin&gt;
-          &lt;groupId&gt;com.basistech&lt;/groupId&gt;
-          &lt;artifactId&gt;bbh-maven-plugin&lt;/artifactId&gt;
-          &lt;version&gt;1.0.2-SNAPSHOT&lt;/version&gt;
+          &lt;groupId&gt;com.basistech.maven.plugins&lt;/groupId&gt;
+          &lt;artifactId&gt;autogen&lt;/artifactId&gt;
+          &lt;version&gt;6&lt;/version&gt;
         &lt;/plugin&gt;
         ...
       &lt;/plugins&gt;
@@ -168,9 +160,9 @@ Anything else is an error.</td></tr></table>
     &lt;!-- To use the plugin goals in your POM or parent POM --&gt;
     &lt;plugins&gt;
       &lt;plugin&gt;
-        &lt;groupId&gt;com.basistech&lt;/groupId&gt;
-        &lt;artifactId&gt;bbh-maven-plugin&lt;/artifactId&gt;
-        &lt;version&gt;1.0.2-SNAPSHOT&lt;/version&gt;
+        &lt;groupId&gt;com.basistech.maven.plugins&lt;/groupId&gt;
+        &lt;artifactId&gt;autogen&lt;/artifactId&gt;
+        &lt;version&gt;6&lt;/version&gt;
       &lt;/plugin&gt;
       ...
     &lt;/plugins&gt;

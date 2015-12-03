@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="Date-Revision-yyyymmdd" content="20151203" />
     <meta http-equiv="Content-Language" content="en" />
-    <title>bbh-maven-plugin &#x2013; bbh:help</title>
+    <title>Autogen code generator &#x2013; autogen:generate</title>
     <link rel="stylesheet" href="./css/apache-maven-fluido-1.3.1.min.css" />
     <link rel="stylesheet" href="./css/site.css" />
     <link rel="stylesheet" href="./css/print.css" media="print" />
@@ -27,7 +27,7 @@
           <div id="banner">
         <div class="pull-left">
                                 <div id="bannerLeft">
-                <h2>bbh-maven-plugin</h2>
+                <h2>Autogen code generator</h2>
                 </div>
                       </div>
         <div class="pull-right">  </div>
@@ -41,7 +41,7 @@
                   <li id="publishDate">Last Published: 2015-12-03
                       <span class="divider">|</span>
                    </li>
-                  <li id="projectVersion">Version: 1.0.2-SNAPSHOT
+                  <li id="projectVersion">Version: 6
                       </li>
                       
                 
@@ -111,24 +111,65 @@
             
   
     <div class="section">
-<h2><a name="bbh:help"></a>bbh:help</h2>
+<h2><a name="autogen:generate"></a>autogen:generate</h2>
       
 <p><b>Full name</b>:</p>
       
-<p>com.basistech:bbh-maven-plugin:1.0.2-SNAPSHOT:help</p>
+<p>com.basistech.maven.plugins:autogen:6:generate</p>
       
 <p><b>Description</b>:</p>
       
-<div>Display help information on bbh-maven-plugin.<br />
-Call <tt>mvn basis-build-helper-plugin:help -Ddetail=true
--Dgoal=&lt;goal-name&gt;</tt> to display parameter details.</div>
+<div>(no description)</div>
       
 <p><b>Attributes</b>:</p>
       
 <ul>
         
-<li>The goal is thread-safe and supports parallel builds.</li>
+<li>Requires a Maven project to be executed.</li>
+        
+<li>Binds by default to the <a class="externalLink" href="http://maven.apache.org/ref/current/maven-core/lifecycles.html">lifecycle phase</a>: <tt>generate-sources</tt>.</li>
       </ul>
+      
+<div class="section">
+<h3><a name="Required_Parameters"></a>Required Parameters</h3>
+        
+<table class="table table-striped" border="0">
+          
+<tr class="a">
+            
+<th>Name</th>
+            
+<th>Type</th>
+            
+<th>Since</th>
+            
+<th>Description</th>
+          </tr>
+          
+<tr class="b">
+            
+<td><b><a href="#project">project</a></b></td>
+            
+<td><tt>MavenProject</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>(no description)<br /><b>User property is</b>: <tt>project</tt>.</td>
+          </tr>
+          
+<tr class="a">
+            
+<td><b><a href="#templates">templates</a></b></td>
+            
+<td><tt>List</tt></td>
+            
+<td><tt>-</tt></td>
+            
+<td>The templates to process. Each one is specified as code, data,
+package.<br /></td>
+          </tr>
+        </table>
+      </div>
       
 <div class="section">
 <h3><a name="Optional_Parameters"></a>Optional Parameters</h3>
@@ -148,48 +189,24 @@ Call <tt>mvn basis-build-helper-plugin:help -Ddetail=true
           
 <tr class="b">
             
-<td><b><a href="#detail">detail</a></b></td>
-            
-<td><tt>boolean</tt></td>
-            
-<td><tt>-</tt></td>
-            
-<td>If <tt>true</tt>, display all settable properties for each
-goal.<br /><b>Default value is</b>: <tt>false</tt>.<br /><b>User property is</b>: <tt>detail</tt>.</td>
-          </tr>
-          
-<tr class="a">
-            
-<td><b><a href="#goal">goal</a></b></td>
+<td><b><a href="#language">language</a></b></td>
             
 <td><tt>String</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The name of the goal for which to show help. If unspecified, all
-goals will be displayed.<br /><b>User property is</b>: <tt>goal</tt>.</td>
-          </tr>
-          
-<tr class="b">
-            
-<td><b><a href="#indentSize">indentSize</a></b></td>
-            
-<td><tt>int</tt></td>
-            
-<td><tt>-</tt></td>
-            
-<td>The number of spaces per indentation level, should be positive.<br /><b>Default value is</b>: <tt>2</tt>.<br /><b>User property is</b>: <tt>indentSize</tt>.</td>
+<td>(no description)<br /><b>Default value is</b>: <tt>java</tt>.<br /><b>User property is</b>: <tt>autogen.language</tt>.</td>
           </tr>
           
 <tr class="a">
             
-<td><b><a href="#lineLength">lineLength</a></b></td>
+<td><b><a href="#outputDirectory">outputDirectory</a></b></td>
             
-<td><tt>int</tt></td>
+<td><tt>File</tt></td>
             
 <td><tt>-</tt></td>
             
-<td>The maximum length of a display line, should be positive.<br /><b>Default value is</b>: <tt>80</tt>.<br /><b>User property is</b>: <tt>lineLength</tt>.</td>
+<td>Destination directory<br /><b>Default value is</b>: <tt>${project.build.directory}/generated-sources/</tt>.<br /><b>User property is</b>: <tt>autogen.targetDir</tt>.</td>
           </tr>
         </table>
       </div>
@@ -197,25 +214,9 @@ goals will be displayed.<br /><b>User property is</b>: <tt>goal</tt>.</td>
 <div class="section">
 <h3><a name="Parameter_Details"></a>Parameter Details</h3>
         
-<p><b><a name="detail">detail</a>:</b></p>
+<p><b><a name="language">language</a>:</b></p>
         
-<div>If <tt>true</tt>, display all settable properties for each
-goal.</div>
-        
-<ul>
-          
-<li><b>Type</b>: <tt>boolean</tt></li>
-          
-<li><b>Required</b>: <tt>No</tt></li>
-          
-<li><b>User Property</b>: <tt>detail</tt></li>
-          
-<li><b>Default</b>: <tt>false</tt></li>
-        </ul><hr />
-<p><b><a name="goal">goal</a>:</b></p>
-        
-<div>The name of the goal for which to show help. If unspecified, all
-goals will be displayed.</div>
+<div>(no description)</div>
         
 <ul>
           
@@ -223,35 +224,46 @@ goals will be displayed.</div>
           
 <li><b>Required</b>: <tt>No</tt></li>
           
-<li><b>User Property</b>: <tt>goal</tt></li>
+<li><b>User Property</b>: <tt>autogen.language</tt></li>
+          
+<li><b>Default</b>: <tt>java</tt></li>
         </ul><hr />
-<p><b><a name="indentSize">indentSize</a>:</b></p>
+<p><b><a name="outputDirectory">outputDirectory</a>:</b></p>
         
-<div>The number of spaces per indentation level, should be positive.</div>
+<div>Destination directory</div>
         
 <ul>
           
-<li><b>Type</b>: <tt>int</tt></li>
+<li><b>Type</b>: <tt>java.io.File</tt></li>
           
 <li><b>Required</b>: <tt>No</tt></li>
           
-<li><b>User Property</b>: <tt>indentSize</tt></li>
+<li><b>User Property</b>: <tt>autogen.targetDir</tt></li>
           
-<li><b>Default</b>: <tt>2</tt></li>
+<li><b>Default</b>: <tt>${project.build.directory}/generated-sources/</tt></li>
         </ul><hr />
-<p><b><a name="lineLength">lineLength</a>:</b></p>
+<p><b><a name="project">project</a>:</b></p>
         
-<div>The maximum length of a display line, should be positive.</div>
+<div>(no description)</div>
         
 <ul>
           
-<li><b>Type</b>: <tt>int</tt></li>
+<li><b>Type</b>: <tt>org.apache.maven.project.MavenProject</tt></li>
           
-<li><b>Required</b>: <tt>No</tt></li>
+<li><b>Required</b>: <tt>Yes</tt></li>
           
-<li><b>User Property</b>: <tt>lineLength</tt></li>
+<li><b>User Property</b>: <tt>project</tt></li>
+        </ul><hr />
+<p><b><a name="templates">templates</a>:</b></p>
+        
+<div>The templates to process. Each one is specified as code, data,
+package.</div>
+        
+<ul>
           
-<li><b>Default</b>: <tt>80</tt></li>
+<li><b>Type</b>: <tt>java.util.List</tt></li>
+          
+<li><b>Required</b>: <tt>Yes</tt></li>
         </ul>
       </div>
     </div>
