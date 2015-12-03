@@ -5,28 +5,26 @@
     <artifactId>bbh-maven-plugin</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
-
     <parent>
+        <artifactId>open-source-parent</artifactId>
         <groupId>com.basistech</groupId>
-        <artifactId>textanalytics</artifactId>
-        <version>57.0.1</version>
+        <version>0.1.2</version>
     </parent>
-
     <name>bbh-maven-plugin</name>
     <description>
       A maven plugin with goals that provide 'build-helper' solutions
       to Basis Techology's specific issues.
     </description>
-    <url>http://git.basistech.net/pages/textanalytics/basis-build-helper-maven-plugin</url>
+    <url>http://basis-technology-corp.github.io/basis-build-helper-maven-plugin</url>
     <scm>
-        <connection>scm:git:git@git.basistech.net:textanalytics/basis-build-helper-maven-plugin.git</connection>
-        <developerConnection>scm:git:git@git.basistech.net:textanalytics/basis-build-helper-maven-plugin.git</developerConnection>
+        <connection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</connection>
+        <developerConnection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
     <distributionManagement>
         <site>
             <id>adm-site</id>
-            <url>scm:git:git@git.basistech.net:textanalytics/basis-build-helper-maven-plugin.git</url>
+            <url>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</url>
         </site>
     </distributionManagement>
 
@@ -69,42 +67,11 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>2.5.1</version>
-                    <configuration>
-                        <useReleaseProfile>true</useReleaseProfile>
-                        <releaseProfiles>release</releaseProfiles>
-                        <remoteTagging>true</remoteTagging>
-                        <autoVersionSubmodules>true</autoVersionSubmodules>
-                        <goals>deploy</goals>
-                        <pushChanges>true</pushChanges>
-                        <localCheckout>true</localCheckout>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
-            <plugin>
-                <!-- This plugin overrides deploy -->
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.5</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>basistech.repo</serverId>
-                    <nexusUrl>http://nexus.basistech.net:8081/nexus/</nexusUrl>
-                    <!-- ID for text-analytics staging profile -->
-                    <stagingProfileId>1dd11ca8866422</stagingProfileId>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.2</version>
+                <version>3.4</version>
                 <configuration>
                     <goalPrefix>basis-build-helper-plugin</goalPrefix>
                     <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -127,7 +94,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -140,7 +106,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
