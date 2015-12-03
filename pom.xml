@@ -1,6 +1,6 @@
+<?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.basistech</groupId>
     <artifactId>bbh-maven-plugin</artifactId>
     <version>1.0.2-SNAPSHOT</version>
@@ -27,14 +27,12 @@
             <url>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</url>
         </site>
     </distributionManagement>
-
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-version>3.2.1</maven-version>
         <!-- hopeless in a maven plugin -->
-         <skip-dependency-convergence>true</skip-dependency-convergence>
-      </properties>
-
+        <skip-dependency-convergence>true</skip-dependency-convergence>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.maven</groupId>
@@ -57,7 +55,6 @@
             <version>3.2</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -65,7 +62,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -145,4 +141,13 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>3.4</version>
+            </plugin>
+           </plugins>
+    </reporting>
 </project>
