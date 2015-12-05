@@ -24,7 +24,7 @@
     </scm>
     <distributionManagement>
         <site>
-            <id>adm-site</id>
+            <id>site</id>
             <url>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</url>
         </site>
     </distributionManagement>
