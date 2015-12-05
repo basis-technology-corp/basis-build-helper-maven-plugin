@@ -17,6 +17,7 @@
     </description>
     <url>http://basis-technology-corp.github.io/basis-build-helper-maven-plugin</url>
     <scm>
+        <url>https://github.com/basis-technology-corp/basis-autogen-maven-plugin</url>
         <connection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</developerConnection>
         <tag>HEAD</tag>
