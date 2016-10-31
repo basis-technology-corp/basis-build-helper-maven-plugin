@@ -185,6 +185,7 @@
                             <goal>verify</goal>
                         </goals>
                     </execution>
+                    <!--
                     <execution>
                         <id>integration-test-karaf-converter</id>
                         <configuration>
@@ -202,6 +203,7 @@
                             <goal>verify</goal>
                         </goals>
                     </execution>
+                    -->
                 </executions>
             </plugin>
         </plugins>
