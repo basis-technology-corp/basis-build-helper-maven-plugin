@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.basistech</groupId>
     <artifactId>bbh-maven-plugin</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <parent>
         <artifactId>open-source-parent</artifactId>
@@ -12,14 +13,15 @@
     </parent>
     <name>bbh-maven-plugin</name>
     <description>
-      A maven plugin with goals that provide 'build-helper' solutions
-      to Basis Techology's specific issues.
+        A maven plugin with goals that provide 'build-helper' solutions
+        to Basis Techology's specific issues.
     </description>
     <url>http://basis-technology-corp.github.io/basis-build-helper-maven-plugin</url>
     <scm>
         <url>https://github.com/basis-technology-corp/basis-autogen-maven-plugin</url>
         <connection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git
+        </developerConnection>
         <tag>HEAD</tag>
     </scm>
     <distributionManagement>
@@ -51,10 +53,49 @@
             <version>${maven-version}</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>2.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.wagon</groupId>
+            <artifactId>wagon-http</artifactId>
+            <version>2.10</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.woodstox</groupId>
+            <artifactId>woodstox-core</artifactId>
+            <version>5.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.stax-utils</groupId>
+            <artifactId>stax-utils</artifactId>
+            <version>20070216</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.bea.xml</groupId>
+                    <artifactId>jsr173-ri</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>com.bea.xml</groupId>
+            <artifactId>jsr173-ri</artifactId>
+            <version>1.0</version>
+        </dependency>
+        -->
+        <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- Use Karaf's own code to read a features.xml file. -->
+        <dependency>
+            <groupId>org.apache.karaf.features</groupId>
+            <artifactId>org.apache.karaf.features.core</artifactId>
+            <version>4.0.6</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -118,20 +159,43 @@
                 <version>1.7</version>
                 <configuration>
                     <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
-                    <pomIncludes>
-                        <pomInclude>*/pom.xml</pomInclude>
-                    </pomIncludes>
                     <postBuildHookScript>verify</postBuildHookScript>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <settingsFile>src/it/settings.xml</settingsFile>
-                    <goals>
-                        <goal>clean</goal>
-                        <goal>generate-resources</goal>
-                    </goals>
+
                 </configuration>
                 <executions>
                     <execution>
-                        <id>integration-test</id>
+                        <id>integration-test-osgi-version</id>
+                        <configuration>
+                            <goals>
+                                <goal>clean</goal>
+                                <goal>generate-resources</goal>
+                            </goals>
+                            <pomIncludes>
+                                <pomInclude>*/pom.xml</pomInclude>
+                            </pomIncludes>
+                            <pomExcludes>
+                                <pomExclude>karaf*/pom.xml</pomExclude>
+                            </pomExcludes>
+                        </configuration>
+                        <goals>
+                            <goal>install</goal>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>integration-test-karaf-converter</id>
+                        <configuration>
+                            <goals>
+                                <goal>clean</goal>
+                                <goal>prepare-package</goal>
+                            </goals>
+                            <pomIncludes>
+                                <pomInclude>karaf*/pom.xml</pomInclude>
+                            </pomIncludes>
+                        </configuration>
                         <goals>
                             <goal>install</goal>
                             <goal>integration-test</goal>
@@ -149,6 +213,6 @@
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.4</version>
             </plugin>
-           </plugins>
+        </plugins>
     </reporting>
 </project>
