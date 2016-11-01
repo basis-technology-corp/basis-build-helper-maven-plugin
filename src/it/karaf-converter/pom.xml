@@ -46,6 +46,9 @@
               <featuresFiles>
                 <featuresFile>${basedir}/lots.xml</featuresFile>
               </featuresFiles>
+              <featureExcludes>
+                <featureExclude>pax-jetty-spdy</featureExclude>
+              </featureExcludes>
             </configuration>
           </execution>
         </executions>

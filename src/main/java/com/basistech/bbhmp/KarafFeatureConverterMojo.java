@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -90,6 +91,43 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     MavenProject project;
 
     /**
+     * Select features by name
+     */
+    @Parameter
+    Set<String> featureIncludes;
+
+    /**
+     * Exclude features by name
+     */
+    @Parameter
+    Set<String> featureExcludes;
+
+    /**
+     * Include bundles by GAV patterns: group:artifact:classifier:type patterns
+     */
+    @Parameter
+    Set<String> bundleIncludes;
+
+    /**
+     * Exclude bundles by GAV patterns: group:artifact:classifier:type patterns
+     */
+    @Parameter
+    Set<String> bundleExcludes;
+
+    /**
+     * Log at the bundle level.
+     */
+    @Parameter
+    boolean verboseBundles;
+
+
+    /**
+     * Log at the feature level
+     */
+    @Parameter(defaultValue = "true")
+    boolean verboseFeatures;
+
+    /**
      * Used to look up Artifacts in the remote repository.
      */
     @Component
@@ -120,10 +158,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     ArtifactFactory factory;
 
     Map<Integer, List<BundleInfo>> accumulatedBundles;
+    private IncludeExcludeArtifactFilter bundleFilter;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         accumulatedBundles = new TreeMap<>();
+        bundleFilter = new IncludeExcludeArtifactFilter(bundleIncludes, bundleExcludes, null);
+
         for (File featuresFile : featuresFiles) {
             processOneFeatureFile(featuresFile);
         }
@@ -146,10 +187,31 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
 
         for (Feature feature : features.getFeature()) {
-            for (Bundle bundle : feature.getBundle()) {
-                processBundle(bundle);
+            if (acceptFeature(feature)) {
+                if (verboseFeatures) {
+                    getLog().info("Including feature " + feature.getName());
+                }
+                for (Bundle bundle : feature.getBundle()) {
+                    processBundle(bundle);
+                }
+            } else {
+                if (verboseFeatures) {
+                    getLog().info("Excluding feature " + feature.getName());
+                }
             }
         }
+    }
+
+    private boolean acceptFeature(Feature feature) {
+        if (featureIncludes != null && featureIncludes.size() > 0) {
+            if (!featureIncludes.contains(feature.getName())) {
+                return false;
+            }
+        }
+        if (featureExcludes != null && featureExcludes.size() > 0) {
+            return !featureExcludes.contains(feature.getName());
+        }
+        return true;
     }
 
     private void writeMetadata() throws MojoExecutionException {
@@ -186,6 +248,16 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
     private void processBundle(Bundle bundle) throws MojoExecutionException {
         Artifact artifact = getArtifact(bundle);
+        if (!bundleFilter.isSelected(artifact)) { // this checks for null, and thus handles wrap:
+            if (verboseBundles) {
+                getLog().info(String.format("Bundle %s excluded", artifact.getId()));
+            }
+            return;
+        }
+        if (verboseBundles) {
+            getLog().info(String.format("Bundle %s included", artifact.getId()));
+        }
+
         String outputFilename = String.format("%s-%s-%s.jar", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
         File outputFile = new File(outputDirectory, outputFilename);
         copyFile(artifact.getFile(), outputFile);
@@ -219,7 +291,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     protected Artifact getArtifact(Bundle bundle) throws MojoExecutionException {
         Artifact artifact;
 
-        KarafBundleCoordinates coords = new KarafBundleCoordinates(bundle.getLocation());
+        KarafBundleCoordinates coords;
+        try {
+            coords = new KarafBundleCoordinates(bundle.getLocation());
+        } catch (IllegalArgumentException e) {
+            getLog().warn("Non-mvn: bundle skipped: " + bundle.getLocation());
+            return null;
+        }
 
         VersionRange vr;
         try {

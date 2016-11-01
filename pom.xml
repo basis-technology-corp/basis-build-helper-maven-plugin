@@ -78,13 +78,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>com.bea.xml</groupId>
-            <artifactId>jsr173-ri</artifactId>
-            <version>1.0</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
@@ -156,7 +149,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-invoker-plugin</artifactId>
-                <version>1.7</version>
+                <version>2.0.0</version>
                 <configuration>
                     <cloneProjectsTo>${project.build.directory}/it</cloneProjectsTo>
                     <postBuildHookScript>verify</postBuildHookScript>
@@ -185,7 +178,6 @@
                             <goal>verify</goal>
                         </goals>
                     </execution>
-                    <!--
                     <execution>
                         <id>integration-test-karaf-converter</id>
                         <configuration>
@@ -196,6 +188,7 @@
                             <pomIncludes>
                                 <pomInclude>karaf*/pom.xml</pomInclude>
                             </pomIncludes>
+                            <skipInvocation>true</skipInvocation>
                         </configuration>
                         <goals>
                             <goal>install</goal>
@@ -203,7 +196,6 @@
                             <goal>verify</goal>
                         </goals>
                     </execution>
-                    -->
                 </executions>
             </plugin>
         </plugins>
