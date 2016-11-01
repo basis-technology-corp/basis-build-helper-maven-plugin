@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,10 +160,17 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
     Map<Integer, List<BundleInfo>> accumulatedBundles;
     private IncludeExcludeArtifactFilter bundleFilter;
+    private Set<String> bundlesProcessed;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         accumulatedBundles = new TreeMap<>();
+        /*
+         * If a bundle turns up twice, we're going to believe the first start level we see.
+         * We may need something more complex to ensure that we take, instead, the smallest start level
+         * that we see.
+         */
+        bundlesProcessed = new HashSet<>();
         bundleFilter = new IncludeExcludeArtifactFilter(bundleIncludes, bundleExcludes, null);
 
         for (File featuresFile : featuresFiles) {
@@ -248,6 +256,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
     private void processBundle(Bundle bundle) throws MojoExecutionException {
         Artifact artifact = getArtifact(bundle);
+
         if (!bundleFilter.isSelected(artifact)) { // this checks for null, and thus handles wrap:
             if (verboseBundles) {
                 getLog().info(String.format("Bundle %s excluded", artifact.getId()));
@@ -259,6 +268,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
 
         String outputFilename = String.format("%s-%s-%s.jar", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+        if (bundlesProcessed.contains(outputFilename)) {
+            if (verboseBundles) {
+                getLog().info(String.format("Bundle %s duplicated", artifact.getId()));
+            }
+            return;
+        }
+
         File outputFile = new File(outputDirectory, outputFilename);
         copyFile(artifact.getFile(), outputFile);
         List<BundleInfo> infoList;
