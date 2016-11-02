@@ -16,6 +16,8 @@
 
 package com.basistech.bbhmp;
 
+import org.apache.maven.plugin.MojoFailureException;
+
 /**
  * Karaf feature.xml files have URI's for bundles. In theory, we could use pax-url to resolve these,
  *  but that is a big entanglement. We insist on mvn:, reject others (e.g. wrap), and assume no
@@ -26,15 +28,27 @@ class KarafBundleCoordinates {
     private final String groupId;
     private final String artifactId;
     private final String version;
+    private final String classifier;
 
-    KarafBundleCoordinates(String uri) {
+    KarafBundleCoordinates(String uri) throws MojoFailureException {
         if (!uri.startsWith("mvn:")) {
             throw new IllegalArgumentException("Bundle location is not an mvn: URI: " + uri);
         }
         String[] pieces = uri.substring(4).split("/");
+        if (pieces.length < 3) {
+            throw new MojoFailureException("Invalid bundle location: " + uri);
+        }
         groupId = pieces[0];
         artifactId = pieces[1];
         version = pieces[2];
+        if (pieces.length >= 5) {
+            if (!"jar".equals(pieces[3])) {
+                throw new MojoFailureException("Non-jar 'bundle' " + uri);
+            }
+            classifier = pieces[4];
+        } else {
+            classifier = null;
+        }
     }
 
     String getGroupId() {
@@ -47,5 +61,9 @@ class KarafBundleCoordinates {
 
     String getVersion() {
         return version;
+    }
+
+    public String getClassifier() {
+        return classifier;
     }
 }

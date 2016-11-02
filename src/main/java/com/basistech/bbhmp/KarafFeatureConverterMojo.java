@@ -193,7 +193,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         writeMetadata();
     }
 
-    private void processOneFeatureFile(File featuresFile) throws MojoExecutionException {
+    private void processOneFeatureFile(File featuresFile) throws MojoExecutionException, MojoFailureException {
         InputStream is;
         Features featuresFromXml;
         try {
@@ -225,9 +225,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
     // this also notes what features have been used.
     private boolean acceptFeature(Feature feature) {
-        if (features != null && features.contains(feature.getName())) {
-            features.remove(feature.getName());
-            return true;
+        if (features != null) {
+            if (features.contains(feature.getName())) {
+                features.remove(feature.getName());
+                return true;
+            } else {
+                return false;
+            }
         }
 
         // Include/exclude not used when 'features' are used.
@@ -276,7 +280,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
     }
 
-    private void processBundle(Bundle bundle) throws MojoExecutionException {
+    private void processBundle(Bundle bundle) throws MojoExecutionException, MojoFailureException {
         Artifact artifact = getArtifact(bundle);
 
         if (!bundleFilter.isSelected(artifact)) { // this checks for null, and thus handles wrap:
@@ -326,7 +330,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
     }
 
-    protected Artifact getArtifact(Bundle bundle) throws MojoExecutionException {
+    protected Artifact getArtifact(Bundle bundle) throws MojoExecutionException, MojoFailureException {
         Artifact artifact;
 
         KarafBundleCoordinates coords;
@@ -345,7 +349,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
 
         artifact = factory.createDependencyArtifact(coords.getGroupId(), coords.getArtifactId(), vr,
-                "jar", null, Artifact.SCOPE_COMPILE);
+                "jar", coords.getClassifier(), Artifact.SCOPE_COMPILE);
 
         // Maven 3 will search the reactor for the artifact but Maven 2 does not
         // to keep consistent behaviour, we search the reactor ourselves.
