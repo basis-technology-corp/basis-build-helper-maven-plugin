@@ -195,10 +195,10 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
     private void processOneFeatureFile(File featuresFile) throws MojoExecutionException {
         InputStream is;
-        Features features;
+        Features featuresFromXml;
         try {
             is = new FileInputStream(featuresFile);
-            features = JaxbUtil.unmarshal(featuresFile.toURI().toString(), is, true);
+            featuresFromXml = JaxbUtil.unmarshal(featuresFile.toURI().toString(), is, true);
         } catch (IOException ex) {
             throw new MojoExecutionException("Failed to read " + featuresFile.toString(), ex);
         }
@@ -207,7 +207,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
             outputDirectory.mkdirs();
         }
 
-        for (Feature feature : features.getFeature()) {
+        for (Feature feature : featuresFromXml.getFeature()) {
             if (acceptFeature(feature)) {
                 if (verboseFeatures) {
                     getLog().info("Including feature " + feature.getName());
