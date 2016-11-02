@@ -92,7 +92,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     MavenProject project;
 
     /**
-     * Select features by name
+     * Select a specific collection of features.
+     */
+    @Parameter
+    Set<String> features;
+
+    /**
+     * Select features by name by taking pot luck from feature files.
      */
     @Parameter
     Set<String> featureIncludes;
@@ -158,7 +164,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     @Component
     ArtifactFactory factory;
 
-    Map<Integer, List<BundleInfo>> accumulatedBundles;
+    private Map<Integer, List<BundleInfo>> accumulatedBundles;
     private IncludeExcludeArtifactFilter bundleFilter;
     private Set<String> bundlesProcessed;
 
@@ -175,6 +181,13 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
         for (File featuresFile : featuresFiles) {
             processOneFeatureFile(featuresFile);
+        }
+
+        if (features != null && !features.isEmpty()) {
+            for (String feature : features) {
+                getLog().error("Feature not found: " + feature);
+            }
+            throw new MojoExecutionException("Not all features were found.");
         }
 
         writeMetadata();
@@ -210,12 +223,21 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
     }
 
+    // this also notes what features have been used.
     private boolean acceptFeature(Feature feature) {
+        if (features != null && features.contains(feature.getName())) {
+            features.remove(feature.getName());
+            return true;
+        }
+
+        // Include/exclude not used when 'features' are used.
+
         if (featureIncludes != null && featureIncludes.size() > 0) {
             if (!featureIncludes.contains(feature.getName())) {
                 return false;
             }
         }
+
         if (featureExcludes != null && featureExcludes.size() > 0) {
             return !featureExcludes.contains(feature.getName());
         }
