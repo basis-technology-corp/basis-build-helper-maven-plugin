@@ -34,19 +34,22 @@ class ArtifactId {
 
     private final String classifier;
 
+    private final String version;
+
     ArtifactId(Dependency dependency) {
-        this(dependency.getGroupId(), dependency.getArtifactId(), dependency.getType(), dependency.getClassifier());
+        this(dependency.getGroupId(), dependency.getArtifactId(), dependency.getType(), dependency.getClassifier(), dependency.getVersion());
     }
 
     ArtifactId(Artifact artifact) {
-        this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getType(), artifact.getClassifier());
+        this(artifact.getGroupId(), artifact.getArtifactId(), artifact.getType(), artifact.getClassifier(), artifact.getVersion());
     }
 
-    ArtifactId(String groupId, String artifactId, String type, String classifier) {
+    ArtifactId(String groupId, String artifactId, String type, String classifier, String version) {
         this.groupId = (groupId != null) ? groupId : "";
         this.artifactId = (artifactId != null) ? artifactId : "";
         this.type = (type != null) ? type : "";
         this.classifier = (classifier != null) ? classifier : "";
+        this.version = (version != null) ? version : "";
     }
 
     ArtifactId(String id) {
@@ -58,6 +61,7 @@ class ArtifactId {
         artifactId = (tokens.length > 1) ? tokens[1] : "*";
         type = (tokens.length > 3) ? tokens[2] : "*";
         classifier = (tokens.length > 3) ? tokens[3] : ((tokens.length > 2) ? tokens[2] : "*");
+        version = (tokens.length > 4) ? tokens[4] : "*";
     }
 
     String getGroupId() {
@@ -76,6 +80,10 @@ class ArtifactId {
         return classifier;
     }
 
+    public String getVersion() {
+        return version;
+    }
+
     boolean matches(ArtifactId pattern) {
         if (pattern == null) {
             return false;
@@ -89,7 +97,10 @@ class ArtifactId {
         if (!match(getType(), pattern.getType())) {
             return false;
         }
-        return match(getClassifier(), pattern.getClassifier());
+        if (!match(getClassifier(), pattern.getClassifier())) {
+            return false;
+        }
+        return match(getVersion(), pattern.getVersion());
     }
 
     private boolean match(String str, String pattern) {

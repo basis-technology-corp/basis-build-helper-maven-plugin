@@ -37,7 +37,7 @@ class IncludeExcludeArtifactFilter implements ArtifactFilter {
         this.excludes = toIds(excludes);
 
         if (groupPrefix != null && groupPrefix.length() > 0) {
-            this.includes.add(new ArtifactId(groupPrefix + "*", "*", "*", "*"));
+            this.includes.add(new ArtifactId(groupPrefix + "*", "*", "*", "*", "*"));
         }
     }
 
