@@ -48,6 +48,7 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -125,7 +126,12 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
         bundlesProcessed = new HashSet<>();
 
-        interpolator = FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(project.getProperties()));
+        Properties additional = new Properties();
+        // do we need others?
+        additional.put("project.version", project.getVersion());
+
+        interpolator = FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(project.getProperties()),
+                new PropertiesBasedValueSource(additional));
 
         BundlesInfo bundleInfo;
         try {
