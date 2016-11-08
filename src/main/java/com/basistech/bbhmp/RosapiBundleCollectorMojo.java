@@ -16,10 +16,6 @@
 package com.basistech.bbhmp;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
-import org.apache.karaf.features.internal.model.Bundle;
-import org.apache.karaf.features.internal.model.Feature;
-import org.apache.karaf.features.internal.model.Features;
-import org.apache.karaf.features.internal.model.JaxbUtil;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -36,6 +32,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
+import org.codehaus.plexus.interpolation.fixed.PropertiesBasedValueSource;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
 import shaded.org.apache.commons.io.IOUtils;
@@ -44,37 +42,22 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
- * Turn a Karaf features.xml into a collection of jar files and a simpler metadata file.
- * This class exists to allow a transition away from Karaf without leaping immediately
- * into the complexity of bndtools. Its job is to read a features.xml, download each
- * of the bundles, and write out an XML file that lists them, organized by start level.
- * Note that this is completely ignorant of the configuration admin 'features' of features;
- * it is up to someone else to set up any required configuration.
+ * Read a Rosapi bundles.xml and collect all the bundles.
  */
-@Mojo(name = "repackage-karaf-features", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
-public class KarafFeatureConverterMojo extends AbstractMojo {
+@Mojo(name = "collect-bundles", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+public class RosapiBundleCollectorMojo extends AbstractMojo {
 
-    /**
-     * The feature file to process. The default is not very useful, since this
-     * will usually be a file built elsewhere. We could make this look in the dependency
-     * graph, but that seems too much trouble. The pom might grab it with the maven-dependency-plugin.
-     */
     @Parameter(required = true)
-    List<File> featuresFiles;
+    File bundleInfoFile;
 
     @Parameter(defaultValue = "${project.build.directory}/bundles")
     File outputDirectory;
@@ -82,7 +65,7 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     /**
      * What start level to apply to bundles that have no explicit start level.
      */
-    @Parameter(defaultValue = "70")
+    @Parameter(defaultValue = "80")
     int defaultStartLevel;
 
     /**
@@ -91,35 +74,6 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     MavenProject project;
 
-    /**
-     * Select a specific collection of features.
-     */
-    @Parameter
-    Set<String> features;
-
-    /**
-     * Select features by name by taking pot luck from feature files.
-     */
-    @Parameter
-    Set<String> featureIncludes;
-
-    /**
-     * Exclude features by name
-     */
-    @Parameter
-    Set<String> featureExcludes;
-
-    /**
-     * Include bundles by GAV patterns: group:artifact:classifier:type patterns
-     */
-    @Parameter
-    Set<String> bundleIncludes;
-
-    /**
-     * Exclude bundles by GAV patterns: group:artifact:classifier:type patterns
-     */
-    @Parameter
-    Set<String> bundleExcludes;
 
     /**
      * Log at the bundle level.
@@ -164,131 +118,32 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
     @Component
     ArtifactFactory factory;
 
-    private Map<Integer, List<BundleInfo>> accumulatedBundles;
-    private IncludeExcludeArtifactFilter bundleFilter;
     private Set<String> bundlesProcessed;
+    private FixedStringSearchInterpolator interpolator;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        accumulatedBundles = new TreeMap<>();
-        /*
-         * If a bundle turns up twice, we're going to believe the first start level we see.
-         * We may need something more complex to ensure that we take, instead, the smallest start level
-         * that we see.
-         */
         bundlesProcessed = new HashSet<>();
-        bundleFilter = new IncludeExcludeArtifactFilter(bundleIncludes, bundleExcludes, null);
 
-        for (File featuresFile : featuresFiles) {
-            processOneFeatureFile(featuresFile);
-        }
+        interpolator = FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(project.getProperties()));
 
-        if (features != null && !features.isEmpty()) {
-            for (String feature : features) {
-                getLog().error("Feature not found: " + feature);
-            }
-            throw new MojoExecutionException("Not all features were found.");
-        }
-
-        writeMetadata();
-    }
-
-    private void processOneFeatureFile(File featuresFile) throws MojoExecutionException, MojoFailureException {
-        InputStream is;
-        Features featuresFromXml;
+        BundlesInfo bundleInfo;
         try {
-            is = new FileInputStream(featuresFile);
-            featuresFromXml = JaxbUtil.unmarshal(featuresFile.toURI().toString(), is, true);
-        } catch (IOException ex) {
-            throw new MojoExecutionException("Failed to read " + featuresFile.toString(), ex);
+            bundleInfo = BundlesInfo.read(bundleInfoFile.toPath());
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to read " + bundleInfoFile.toString());
         }
-
-        if (!outputDirectory.exists()) {
-            outputDirectory.mkdirs();
-        }
-
-        for (Feature feature : featuresFromXml.getFeature()) {
-            if (acceptFeature(feature)) {
-                if (verboseFeatures) {
-                    getLog().info("Including feature " + feature.getName());
-                }
-                for (Bundle bundle : feature.getBundle()) {
-                    processBundle(bundle);
-                }
-            } else {
-                if (verboseFeatures) {
-                    getLog().info("Excluding feature " + feature.getName());
-                }
+        for (LevelBundles levelBundles : bundleInfo.levels) {
+            for (BundleInfo bundle : levelBundles.bundles) {
+                processBundle(bundle);
             }
         }
+        writeMetadata(bundleInfo);
     }
 
-    // this also notes what features have been used.
-    private boolean acceptFeature(Feature feature) {
-        if (features != null) {
-            if (features.contains(feature.getName())) {
-                features.remove(feature.getName());
-                return true;
-            } else {
-                return false;
-            }
-        }
 
-        // Include/exclude not used when 'features' are used.
-
-        if (featureIncludes != null && featureIncludes.size() > 0) {
-            if (!featureIncludes.contains(feature.getName())) {
-                return false;
-            }
-        }
-
-        if (featureExcludes != null && featureExcludes.size() > 0) {
-            return !featureExcludes.contains(feature.getName());
-        }
-        return true;
-    }
-
-    private void writeMetadata() throws MojoExecutionException {
-        OutputStream os = null;
-        File md = new File(outputDirectory, "bundles.xml");
-
-        try {
-            os = new FileOutputStream(md);
-            XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(os);
-            writer = new IndentingXMLStreamWriter(writer);
-            writer.writeStartDocument("utf-8", "1.0");
-            writer.writeStartElement("bundles");
-            for (Map.Entry<Integer, List<BundleInfo>> me : accumulatedBundles.entrySet()) {
-                writer.writeStartElement("level");
-                writer.writeAttribute("level", Integer.toString(me.getKey()));
-                for (BundleInfo bi : me.getValue()) {
-                    writer.writeStartElement("bundle");
-                    writer.writeAttribute("start", Boolean.toString(bi.start));
-                    writer.writeCharacters(bi.location);
-                    writer.writeEndElement();
-                }
-                writer.writeEndElement();
-            }
-            writer.writeEndElement();
-            writer.writeEndDocument();
-            writer.flush();
-
-        } catch (IOException | XMLStreamException e) {
-            throw new MojoExecutionException("Failed to write metadata file " + md.toString(), e);
-        } finally {
-            IOUtils.closeQuietly(os);
-        }
-    }
-
-    private void processBundle(Bundle bundle) throws MojoExecutionException, MojoFailureException {
+    private void processBundle(BundleInfo bundle) throws MojoExecutionException, MojoFailureException {
         Artifact artifact = getArtifact(bundle);
-
-        if (!bundleFilter.isSelected(artifact)) { // this checks for null, and thus handles wrap:
-            if (verboseBundles) {
-                getLog().info(String.format("Bundle %s excluded", artifact.getId()));
-            }
-            return;
-        }
         if (verboseBundles) {
             getLog().info(String.format("Bundle %s included", artifact.getId()));
         }
@@ -303,17 +158,39 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
 
         File outputFile = new File(outputDirectory, outputFilename);
         copyFile(artifact.getFile(), outputFile);
-        List<BundleInfo> infoList;
-        int startLevel = bundle.getStartLevel();
-        if (startLevel == 0) {
-            startLevel = defaultStartLevel;
+        bundle.setFilename(outputFile.getName());
+    }
+
+    private void writeMetadata(BundlesInfo info) throws MojoExecutionException {
+        OutputStream os = null;
+        File md = new File(outputDirectory, "bundles.xml");
+
+        try {
+            os = new FileOutputStream(md);
+            XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(os);
+            writer = new IndentingXMLStreamWriter(writer);
+            writer.writeStartDocument("utf-8", "1.0");
+            writer.writeStartElement("bundles");
+            for (LevelBundles levelBundles : info.levels) {
+                writer.writeStartElement("level");
+                writer.writeAttribute("level", Integer.toString(levelBundles.level));
+                for (BundleInfo bi : levelBundles.bundles) {
+                    writer.writeStartElement("bundle");
+                    writer.writeAttribute("start", Boolean.toString(bi.start));
+                    writer.writeCharacters(bi.gav);
+                    writer.writeEndElement();
+                }
+                writer.writeEndElement();
+            }
+            writer.writeEndElement();
+            writer.writeEndDocument();
+            writer.flush();
+
+        } catch (IOException | XMLStreamException e) {
+            throw new MojoExecutionException("Failed to write metadata file " + md.toString(), e);
+        } finally {
+            IOUtils.closeQuietly(os);
         }
-        infoList = accumulatedBundles.get(startLevel);
-        if (infoList == null) {
-            infoList = new ArrayList<>();
-            accumulatedBundles.put(startLevel, infoList);
-        }
-        infoList.add(new BundleInfo(bundle.isStart(), outputFilename));
     }
 
     private void copyFile(File artifact, File destFile) throws MojoExecutionException {
@@ -330,26 +207,31 @@ public class KarafFeatureConverterMojo extends AbstractMojo {
         }
     }
 
-    protected Artifact getArtifact(Bundle bundle) throws MojoExecutionException, MojoFailureException {
+    protected Artifact getArtifact(BundleInfo bundle) throws MojoExecutionException, MojoFailureException {
         Artifact artifact;
 
-        KarafBundleCoordinates coords;
-        try {
-            coords = new KarafBundleCoordinates(bundle.getLocation());
-        } catch (IllegalArgumentException e) {
-            getLog().warn("Non-mvn: bundle skipped: " + bundle.getLocation());
-            return null;
+        String gav = interpolator.interpolate(bundle.gav);
+        String[] pieces = gav.split("/");
+        String groupId = pieces[0];
+        String artifactId = pieces[1];
+        String versionStr;
+        String classifier = null;
+        if (pieces.length == 3) {
+            versionStr = pieces[2];
+        } else {
+            classifier = pieces[2];
+            versionStr = pieces[3];
         }
 
         VersionRange vr;
         try {
-            vr = VersionRange.createFromVersionSpec(coords.getVersion());
+            vr = VersionRange.createFromVersionSpec(versionStr);
         } catch (InvalidVersionSpecificationException e1) {
-            throw new MojoExecutionException("Bad version range " + coords.getVersion(), e1);
+            throw new MojoExecutionException("Bad version range " + versionStr, e1);
         }
 
-        artifact = factory.createDependencyArtifact(coords.getGroupId(), coords.getArtifactId(), vr,
-                "jar", coords.getClassifier(), Artifact.SCOPE_COMPILE);
+        artifact = factory.createDependencyArtifact(groupId, artifactId, vr,
+                "jar", classifier, Artifact.SCOPE_COMPILE);
 
         // Maven 3 will search the reactor for the artifact but Maven 2 does not
         // to keep consistent behaviour, we search the reactor ourselves.

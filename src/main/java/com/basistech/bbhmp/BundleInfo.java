@@ -19,10 +19,19 @@ package com.basistech.bbhmp;
 
 class BundleInfo {
     final boolean start;
-    final String location;
+    final String gav;
+    private String filename;
 
-    BundleInfo(boolean start, String location) {
+    BundleInfo(boolean start, String gav) {
         this.start = start;
-        this.location = location;
+        this.gav = gav;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 }
