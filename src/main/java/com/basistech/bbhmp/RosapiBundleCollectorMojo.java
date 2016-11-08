@@ -75,7 +75,6 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     MavenProject project;
 
-
     /**
      * Log at the bundle level.
      */
@@ -137,7 +136,7 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
         try {
             bundleInfo = BundlesInfo.read(bundleInfoFile.toPath());
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed to read " + bundleInfoFile.toString());
+            throw new MojoExecutionException("Failed to read " + bundleInfoFile.toString(), e);
         }
         for (LevelBundles levelBundles : bundleInfo.levels) {
             for (BundleInfo bundle : levelBundles.bundles) {

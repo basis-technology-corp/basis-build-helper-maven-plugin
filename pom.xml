@@ -175,7 +175,7 @@
                                 <pomInclude>*/pom.xml</pomInclude>
                             </pomIncludes>
                             <pomExcludes>
-                                <pomExclude>karaf*/pom.xml</pomExclude>
+                                <pomExclude>rosapi-copier/pom.xml</pomExclude>
                             </pomExcludes>
                         </configuration>
                         <goals>
@@ -192,7 +192,7 @@
                                 <goal>prepare-package</goal>
                             </goals>
                             <pomIncludes>
-                                <pomInclude>collect-bundles/pom.xml</pomInclude>
+                                <pomInclude>rosapi-copier/pom.xml</pomInclude>
                             </pomIncludes>
                             <skipInvocation>${skip-bundle-collector}</skipInvocation>
                         </configuration>

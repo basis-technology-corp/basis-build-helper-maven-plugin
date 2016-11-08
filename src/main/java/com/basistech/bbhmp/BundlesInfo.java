@@ -30,21 +30,7 @@ import java.util.List;
 /**
  * Represent the data from a bundle directory. This is very simple; with any luck
  * it will stay that way.
- * {@code
  *
- * <bundles>
-    <level level="20">
-      <bundle start="true">org.ow2.asm-asm-all-5.0.2.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-bundleutils-4.1.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-reflect-4.1.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-finder-4.1.jar</bundle>
-      <bundle start="true">org.ow2.asm-asm-all-5.0.2.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-bundleutils-4.1.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-reflect-4.1.jar</bundle>
-      <bundle start="true">org.apache.xbean-xbean-finder-4.1.jar</bundle>
-     </level>
-    </bundles>
-  * }
  */
 class BundlesInfo {
     final List<LevelBundles> levels;
@@ -55,9 +41,11 @@ class BundlesInfo {
 
     static BundlesInfo read(Path xmlFile) throws IOException {
         List<LevelBundles> levels = new ArrayList<>();
-        XMLStreamReader reader;
+        XMLStreamReader reader = null;
         try (InputStream is = Files.newInputStream(xmlFile)) {
-            reader = XMLInputFactory.newFactory().createXMLStreamReader(is);
+            XMLInputFactory xmlInputFactory = XMLInputFactory.newFactory();
+            xmlInputFactory.setProperty(XMLInputFactory.IS_COALESCING, true);
+            reader = xmlInputFactory.createXMLStreamReader(xmlFile.toAbsolutePath().toString(), is);
             reader.nextTag();
             reader.require(XMLEvent.START_ELEMENT, null, "bundles");
             while (reader.nextTag() == XMLEvent.START_ELEMENT) {
@@ -86,7 +74,11 @@ class BundlesInfo {
             // hit the end of the whole business.
             reader.require(XMLEvent.END_ELEMENT, null, "bundles");
         } catch (XMLStreamException e) {
-            throw new IOException(e);
+            if (reader != null) {
+                throw new IOException("Error reading at " + reader.getLocation().toString(), e);
+            } else {
+                throw new IOException("Error reading", e);
+            }
         }
         levels.sort(Comparator.comparingInt(o -> o.level));
         return new BundlesInfo(levels);
