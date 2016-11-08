@@ -182,7 +182,7 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
                 for (BundleInfo bi : levelBundles.bundles) {
                     writer.writeStartElement("bundle");
                     writer.writeAttribute("start", Boolean.toString(bi.start));
-                    writer.writeCharacters(bi.gav);
+                    writer.writeCharacters(bi.getFilename());
                     writer.writeEndElement();
                 }
                 writer.writeEndElement();
