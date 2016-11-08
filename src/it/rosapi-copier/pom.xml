@@ -27,6 +27,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <test-property>1.4.104-SNAPSHOT</test-property>
   </properties>
 
   <build>
@@ -37,18 +38,13 @@
         <version>@project.version@</version>
         <executions>
           <execution>
-            <id>repackage-karaf-features</id>
+            <id>collect-bundles</id>
             <phase>prepare-package</phase>
             <goals>
-              <goal>repackage-karaf-features</goal>
+              <goal>collect-bundles</goal>
             </goals>
             <configuration>
-              <featuresFiles>
-                <featuresFile>${basedir}/lots.xml</featuresFile>
-              </featuresFiles>
-              <featureExcludes>
-                <featureExclude>pax-jetty-spdy</featureExclude>
-              </featureExcludes>
+              <bundleInfoFile>lots.xml</bundleInfoFile>
             </configuration>
           </execution>
         </executions>
