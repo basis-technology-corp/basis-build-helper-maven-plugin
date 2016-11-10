@@ -54,7 +54,7 @@ class BundlesInfo {
                 List<BundleInfo> bundleInfos = new ArrayList<>();
                 while (reader.nextTag() == XMLEvent.START_ELEMENT) {
                     reader.require(XMLEvent.START_ELEMENT, null, "bundle");
-                    boolean start = Boolean.parseBoolean(reader.getAttributeValue(null, "start"));
+                    boolean start = !Boolean.parseBoolean(reader.getAttributeValue(null, "noStart"));
                     reader.next();
                     if (!reader.isCharacters()) {
                         throw new IOException("No bundle filename text at " + reader.getLocation().toString());

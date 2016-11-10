@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bbh-maven-plugin</artifactId>
     <version>2.0.7-SNAPSHOT</version>
@@ -90,12 +91,6 @@
             <version>3.2</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Use Karaf's own code to read a features.xml file. -->
-        <dependency>
-            <groupId>org.apache.karaf.features</groupId>
-            <artifactId>org.apache.karaf.features.core</artifactId>
-            <version>4.0.6</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -161,45 +156,16 @@
                     <postBuildHookScript>verify</postBuildHookScript>
                     <localRepositoryPath>${project.build.directory}/local-repo</localRepositoryPath>
                     <settingsFile>src/it/settings.xml</settingsFile>
-
+                    <pomIncludes>
+                        <pomInclude>*/pom.xml</pomInclude>
+                    </pomIncludes>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>integration-test-osgi-version</id>
-                        <configuration>
-                            <goals>
-                                <goal>clean</goal>
-                                <goal>generate-resources</goal>
-                            </goals>
-                            <pomIncludes>
-                                <pomInclude>*/pom.xml</pomInclude>
-                            </pomIncludes>
-                            <pomExcludes>
-                                <pomExclude>rosapi-copier/pom.xml</pomExclude>
-                            </pomExcludes>
-                        </configuration>
+                        <id>integration-test</id>
                         <goals>
                             <goal>install</goal>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>integration-test-bundle-collector</id>
-                        <configuration>
-                            <goals>
-                                <goal>clean</goal>
-                                <goal>prepare-package</goal>
-                            </goals>
-                            <pomIncludes>
-                                <pomInclude>rosapi-copier/pom.xml</pomInclude>
-                            </pomIncludes>
-                            <skipInvocation>${skip-bundle-collector}</skipInvocation>
-                        </configuration>
-                        <goals>
-                            <goal>install</goal>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
+                            <goal>run</goal>
                         </goals>
                     </execution>
                 </executions>
