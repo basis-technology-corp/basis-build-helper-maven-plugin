@@ -16,6 +16,7 @@
 package com.basistech.bbhmp;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -31,12 +32,12 @@ import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.interpolation.fixed.FixedStringSearchInterpolator;
 import org.codehaus.plexus.interpolation.fixed.PropertiesBasedValueSource;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.StringUtils;
-import shaded.org.apache.commons.io.IOUtils;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -45,20 +46,46 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
+import java.util.TreeMap;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
 /**
- * Read a Rosapi bundles.xml and collect all the bundles.
+ * Read one or more XML files specifying OSGi bundles, and copy them, setting
+ * up a metadata file that describes them.
+ * The input files look like:
+ * <pre>
+ * {@code
+ <?xml version='1.0' encoding='utf-8'?>
+ <bundles>
+   <level level="1">
+     <bundle>commons-io/commons-io/-dependency-</bundle>
+     <bundle>com.google.inject.extensions/guice-throwingproviders/4.0</bundle>
+   </level>
+   <level level="2">
+     <bundle>com.google.inject.extensions/guice-throwingproviders/4.0</bundle>
+   </level>
+    </bundles>
+}
+ * </pre>
+ * If a bundle is a fragment, this plugin will notice and arrange <i>not</i> to start it
+ * at runtime. If you want to avoid starting some bundle that is not a fragment, add
+ * {@code noStart='true'} to the {@code <bundle/>} element.
+ *
  */
-@Mojo(name = "collect-bundles", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+@Mojo(name = "collect-bundles", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class RosapiBundleCollectorMojo extends AbstractMojo {
 
     @Parameter(required = true)
-    File bundleInfoFile;
+    List<File> bundleInfoFiles;
+
 
     @Parameter(defaultValue = "${project.build.directory}/bundles")
     File outputDirectory;
@@ -118,12 +145,10 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
     @Component
     ArtifactFactory factory;
 
-    private Set<String> bundlesProcessed;
     private FixedStringSearchInterpolator interpolator;
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        bundlesProcessed = new HashSet<>();
 
         Properties additional = new Properties();
         // do we need others?
@@ -132,41 +157,113 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
         interpolator = FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(project.getProperties()),
                 new PropertiesBasedValueSource(additional));
 
-        BundlesInfo bundleInfo;
-        try {
-            bundleInfo = BundlesInfo.read(bundleInfoFile.toPath());
-        } catch (IOException e) {
-            throw new MojoExecutionException("Failed to read " + bundleInfoFile.toString(), e);
-        }
-        for (LevelBundles levelBundles : bundleInfo.levels) {
-            for (BundleInfo bundle : levelBundles.bundles) {
-                processBundle(bundle);
-            }
-        }
-        writeMetadata(bundleInfo);
+        processInputs();
+
     }
 
 
-    private void processBundle(BundleInfo bundle) throws MojoExecutionException, MojoFailureException {
+    private void processInputs() throws MojoFailureException, MojoExecutionException {
+
+        Map<String, BundleSpec> bundlesByGav = new HashMap<>();
+        Map<Integer, List<BundleSpec>> bundlesByLevel = new TreeMap<>(); // keep those levels in order
+
+
+        /* read, check, merge, input files. */
+        if (bundleInfoFiles.size() == 0) {
+            throw new MojoFailureException("No input files provided");
+        }
+
+        for (File bif : bundleInfoFiles) {
+            BundlesInfo info;
+            try {
+                info = BundlesInfo.read(bif.toPath());
+            } catch (IOException e) {
+                throw new MojoFailureException("Unable to read " + bif.getAbsolutePath(), e);
+            }
+            for (LevelBundles levelBundles : info.levels) {
+                for (BundleInfo bi : levelBundles.bundles) {
+                    processBundle(levelBundles.level, bi, bundlesByGav, bundlesByLevel);
+                }
+            }
+        }
+        /* Specs are all sitting in the map. Files are all copied. */
+        writeMetadata(bundlesByLevel);
+    }
+
+
+    private void processBundle(int level, BundleInfo bundle,
+                                     Map<String, BundleSpec> bundlesByGav,
+                                     Map<Integer, List<BundleSpec>> bundlesByLevel
+    ) throws MojoExecutionException, MojoFailureException {
         Artifact artifact = getArtifact(bundle);
         if (verboseBundles) {
             getLog().info(String.format("Bundle %s included", artifact.getId()));
         }
 
-        String outputFilename = String.format("%s-%s-%s.jar", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
-        if (bundlesProcessed.contains(outputFilename)) {
-            if (verboseBundles) {
-                getLog().info(String.format("Bundle %s duplicated", artifact.getId()));
-            }
-            return;
+        String gav;
+        if (artifact.getClassifier() != null) {
+            gav = String.format("%s:%s:%s:%s", artifact.getGroupId(), artifact.getArtifactId(), artifact.getClassifier(), artifact.getVersion());
+        } else {
+            gav = String.format("%s:%s::%s", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
         }
 
-        File outputFile = new File(outputDirectory, outputFilename);
-        copyFile(artifact.getFile(), outputFile);
-        bundle.setFilename(outputFile.getName());
+        BundleSpec prior = bundlesByGav.get(gav);
+        int effLevel;
+        String filename;
+        boolean start;
+        if (prior != null) {
+            start = prior.start;
+            effLevel = Math.min(prior.level, level);
+            if (effLevel != level) {
+                getLog().info(String.format("Multiple levels for %s; choosing %d", gav, effLevel));
+            }
+            bundlesByLevel.get(prior.level).remove(prior);
+            bundlesByGav.remove(gav);
+            filename = prior.filename;
+        } else {
+            effLevel = level;
+            filename = String.format("%s-%s-%s.jar", artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion());
+            File outputFile = new File(outputDirectory, filename);
+            copyFile(artifact.getFile(), outputFile);
+            start = bundle.start && !isJarFragment(outputFile);
+
+        }
+
+        BundleSpec spec = new BundleSpec(gav, effLevel, start, filename);
+        bundlesByGav.put(gav, spec);
+        List<BundleSpec> levelSpecs = bundlesByLevel.computeIfAbsent(effLevel, k -> new ArrayList<>());
+        levelSpecs.add(spec);
     }
 
-    private void writeMetadata(BundlesInfo info) throws MojoExecutionException {
+    private boolean isJarFragment(File outputFile) throws MojoExecutionException, MojoFailureException {
+        JarFile jar;
+        try {
+            jar = new JarFile(outputFile);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Failed to open dependency we just copied " + outputFile.getAbsolutePath(), e);
+        }
+        final Manifest manifest;
+        try {
+            manifest = jar.getManifest();
+        } catch (IOException e) {
+            throw new MojoFailureException("Failed to read manifest from dependency we just copied " + outputFile.getAbsolutePath(), e);
+        }
+        final Attributes mattr = manifest.getMainAttributes();
+        // getValue is case-insensitive.
+        String mfVersion = mattr.getValue("Bundle-ManifestVersion");
+        /*
+         * '2' is the only legitimate bundle manifest version. Version 1 is long obsolete, and not supported
+         * in current containers. There's no plan on the horizon for a version 3. No version at all indicates
+         * that the jar file is not an OSGi bundle at all.
+         */
+        if (!"2".equals(mfVersion)) {
+            throw new MojoFailureException("Bundle-ManifestVersion is not '2' from dependency we just copied " + outputFile.getAbsolutePath());
+        }
+        String host = mattr.getValue("Fragment-Host");
+        return host != null;
+    }
+
+    private void writeMetadata(Map<Integer, List<BundleSpec>> bundlesByLevel) throws MojoExecutionException {
         OutputStream os = null;
         File md = new File(outputDirectory, "bundles.xml");
 
@@ -176,13 +273,13 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
             writer = new IndentingXMLStreamWriter(writer);
             writer.writeStartDocument("utf-8", "1.0");
             writer.writeStartElement("bundles");
-            for (LevelBundles levelBundles : info.levels) {
+            for (Integer level : bundlesByLevel.keySet()) {
                 writer.writeStartElement("level");
-                writer.writeAttribute("level", Integer.toString(levelBundles.level));
-                for (BundleInfo bi : levelBundles.bundles) {
+                writer.writeAttribute("level", Integer.toString(level));
+                for (BundleSpec spec : bundlesByLevel.get(level)) {
                     writer.writeStartElement("bundle");
-                    writer.writeAttribute("start", Boolean.toString(bi.start));
-                    writer.writeCharacters(bi.getFilename());
+                    writer.writeAttribute("start", Boolean.toString(spec.start));
+                    writer.writeCharacters(spec.filename);
                     writer.writeEndElement();
                 }
                 writer.writeEndElement();
@@ -212,8 +309,24 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
         }
     }
 
-    protected Artifact getArtifact(BundleInfo bundle) throws MojoExecutionException, MojoFailureException {
+
+    private String getArtifactVersionFromDependencies(String groupId, String artifactId) {
+        for (Artifact dep : project.getArtifacts()) {
+            if (groupId.equals(dep.getGroupId()) && artifactId.equals(dep.getArtifactId())) {
+                getLog().debug(String.format("Found dependency %s:%s:%s", groupId, artifactId, dep.getVersion()));
+                return dep.getVersion();
+            }
+        }
+        return null;
+    }
+
+    private Artifact getArtifact(BundleInfo bundle) throws MojoExecutionException, MojoFailureException {
         Artifact artifact;
+
+        /*
+         * Anything in the gav may be interpolated.
+         * Version may be "-dependency-" to look for the artifact as a dependency.
+         */
 
         String gav = interpolator.interpolate(bundle.gav);
         String[] pieces = gav.split("/");
@@ -226,6 +339,13 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
         } else {
             classifier = pieces[2];
             versionStr = pieces[3];
+        }
+
+        if ("-dependency-".equals(versionStr)) {
+            versionStr = getArtifactVersionFromDependencies(groupId, artifactId);
+            if (versionStr == null) {
+                throw new MojoFailureException(String.format("Request for %s:%s as a dependency, but it is not a dependency", groupId, artifactId));
+            }
         }
 
         VersionRange vr;
