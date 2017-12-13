@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * Transform a maven version to an OSGi version, dealing, as needed, with the
  * Basis convention of x.y.z.cXX.Y{-SNAPSHOT}. So, we deal with the following cases:
- * x.y.z(-SNAPSHOT)
+ * x.y.z(.qualifier)(-SNAPSHOT) [where a qualifier is a sequence of alphanumeric characters, '_' or '-']
  * x.y.z.cXX.Y(-SNAPSHOT)
  * Anything else is an error.
  *
@@ -42,7 +42,9 @@ import java.util.regex.Pattern;
 @Mojo(name = "osgi-version", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
 public class OsgiVersionMojo extends AbstractMojo {
 
-    private static final Pattern PLAIN_PATTERN = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)(-SNAPSHOT)?");
+    // Matches valid OSGi versions with an optional '-SNAPSHOT' suffix
+    // (note that for the "qualifier" group we deliberately include the leading period)
+    private static final Pattern PLAIN_PATTERN = Pattern.compile("(?<major>[0-9]+)(\\.(?<minor>[0-9]+)(\\.(?<patch>[0-9]+)(?<qualifier>\\.[\\p{Alnum}_-]+?)?)?)?(-SNAPSHOT)?");
     private static final Pattern CXX_PATTERN = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.c[0-9]+\\.[0-9]+(-SNAPSHOT)?");
     private static final String TIMESTAMP_PATTERN = "'v'yyyyMMddhhmmss";
 
@@ -66,6 +68,7 @@ public class OsgiVersionMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         boolean snapshot = project.getVersion().endsWith("-SNAPSHOT");
+        boolean hasQualifier = false;
         String result;
 
         Matcher matcher = CXX_PATTERN.matcher(project.getVersion());
@@ -74,10 +77,19 @@ public class OsgiVersionMojo extends AbstractMojo {
         } else {
             matcher = PLAIN_PATTERN.matcher(project.getVersion());
             if (matcher.matches()) {
-                result = String.format("%s.%s.%s", matcher.group(1), matcher.group(2), matcher.group(3));
+                String major = matcher.group("major");
+                String minor = matcher.group("minor");
+                String patch = matcher.group("patch");
+                String qualifier = matcher.group("qualifier");
+                hasQualifier = qualifier != null;
+                result = String.format("%s.%s.%s%s",
+                    major,
+                    minor == null ? "0" : minor,
+                    patch == null ? "0" : patch,
+                    qualifier == null ? "" : qualifier);
             } else {
-                throw new MojoExecutionException(String.format("Version %s does not match either x.y.z or x.y.z.cXX.Y",
-                        project.getVersion()));
+                throw new MojoExecutionException(String.format("Version %s does not match either x.y.z, x.y.z.cXX.Y, or x.y.z.<qualifier>",
+                    project.getVersion()));
             }
         }
 
@@ -90,8 +102,8 @@ public class OsgiVersionMojo extends AbstractMojo {
             calendar.setTime(now);
             calendar.setTimeZone(timeZone);
             calendar.add(Calendar.SECOND, 0);
-            /* add a qualifier */
-            result = result + "." + format.format(calendar.getTime());
+            /* add or update the qualifier */
+            result = result + (hasQualifier ? "-" : ".") + format.format(calendar.getTime());
         }
         defineProperty(propertyName, result);
     }
