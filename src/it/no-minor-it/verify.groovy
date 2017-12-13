@@ -1,0 +1,14 @@
+Properties properties = new Properties()
+File propertiesFile = new File('target/it/no-minor-it/target/app.properties')
+System.err.println(propertiesFile.getAbsolutePath())
+propertiesFile.withInputStream {
+    properties.load(it)
+}
+
+def runtimeString = 'osgi-version'
+def val = properties."$runtimeString"
+
+def matcher = (val =~ ~/1\.0\.0\.v[0-9]*/)
+assert matcher.matches()
+
+
