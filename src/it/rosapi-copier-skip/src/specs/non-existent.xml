@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bundles>
+    <level level="2">
+        <bundle noStart="true">bad/bad/bad</bundle>
+        <bundle noStart="true">commons-io/commons-io/${test-property}</bundle>
+    </level>
+</bundles>
