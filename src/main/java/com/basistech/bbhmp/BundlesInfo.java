@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -80,7 +81,12 @@ class BundlesInfo {
                 throw new IOException("Error reading", e);
             }
         }
-        levels.sort(Comparator.comparingInt(o -> o.level));
+        Collections.sort(levels, new Comparator<LevelBundles>() {
+            @Override
+            public int compare(LevelBundles o1, LevelBundles o2) {
+                return Integer.compare(o1.level, o2.level);
+            }
+        });
         return new BundlesInfo(levels);
     }
 }

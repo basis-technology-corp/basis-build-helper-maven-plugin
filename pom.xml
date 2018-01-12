@@ -31,8 +31,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven-version>3.2.1</maven-version>
-        <bt.java.source>1.8</bt.java.source>
-        <bt.java.target>1.8</bt.java.target>
+        <bt.java.source>1.7</bt.java.source>
+        <bt.java.target>1.7</bt.java.target>
         <!-- hopeless in a maven plugin -->
         <skip-dependency-convergence>true</skip-dependency-convergence>
         <skip-bundle-collector>true</skip-bundle-collector>

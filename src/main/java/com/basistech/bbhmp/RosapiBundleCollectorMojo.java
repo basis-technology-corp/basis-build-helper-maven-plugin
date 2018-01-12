@@ -108,6 +108,12 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
     @Parameter
     boolean verboseBundles;
 
+    /**
+     * Skip missing artifacts.
+     */
+    @Parameter
+    boolean skipMissingArtifacts;
+
 
     /**
      * Log at the feature level
@@ -195,7 +201,19 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
                                      Map<String, BundleSpec> bundlesByGav,
                                      Map<Integer, List<BundleSpec>> bundlesByLevel
     ) throws MojoExecutionException, MojoFailureException {
-        Artifact artifact = getArtifact(bundle);
+
+        Artifact artifact = null;
+        try {
+            artifact = getArtifact(bundle);
+        } catch (MojoExecutionException e) {
+            if (skipMissingArtifacts) {
+                // just skip
+                return;
+            }
+            throw e;
+        }
+
+
         if (verboseBundles) {
             getLog().info(String.format("Bundle %s included", artifact.getId()));
         }
@@ -231,7 +249,12 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
 
         BundleSpec spec = new BundleSpec(gav, effLevel, start, filename);
         bundlesByGav.put(gav, spec);
-        List<BundleSpec> levelSpecs = bundlesByLevel.computeIfAbsent(effLevel, k -> new ArrayList<>());
+
+        List<BundleSpec> levelSpecs = bundlesByLevel.get(effLevel);
+        if (levelSpecs == null) {
+            levelSpecs = new ArrayList<>();
+            bundlesByLevel.put(effLevel, levelSpecs);
+        }
         levelSpecs.add(spec);
     }
 
