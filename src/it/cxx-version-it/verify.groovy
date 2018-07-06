@@ -7,6 +7,5 @@ propertiesFile.withInputStream {
 
 def runtimeString = 'osgi-version'
 def val = properties."$runtimeString"
-println val
 def matcher = (val =~ ~/7\.13\.102\.c57_0-SNAPSHOT-v[0-9]*/)
 assert matcher.matches()
