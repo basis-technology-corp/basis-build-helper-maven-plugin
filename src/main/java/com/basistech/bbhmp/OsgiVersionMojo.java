@@ -45,7 +45,7 @@ public class OsgiVersionMojo extends AbstractMojo {
     // Matches valid OSGi versions with an optional '-SNAPSHOT' suffix
     // (note that for the "qualifier" group we deliberately include the leading period)
     private static final Pattern PLAIN_PATTERN = Pattern.compile("(?<major>[0-9]+)(\\.(?<minor>[0-9]+)(\\.(?<patch>[0-9]+)(?<qualifier>\\.[\\p{Alnum}_-]+?)?)?)?(-SNAPSHOT)?");
-    private static final Pattern CXX_PATTERN = Pattern.compile("([0-9]+)\\.([0-9]+)\\.([0-9]+)\\.c[0-9]+\\.[0-9]+(-SNAPSHOT)?");
+    private static final Pattern CXX_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+\\.[0-9]+\\.c[0-9]+)\\.([0-9]+[\\p{Alnum}_-]*)");
     private static final String TIMESTAMP_PATTERN = "'v'yyyyMMddhhmmss";
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
@@ -73,7 +73,8 @@ public class OsgiVersionMojo extends AbstractMojo {
 
         Matcher matcher = CXX_PATTERN.matcher(project.getVersion());
         if (matcher.matches()) {
-            result = String.format("%s.%s.%s", matcher.group(1), matcher.group(2), matcher.group(3));
+            result = String.format("%s_%s", matcher.group(1), matcher.group(2));
+            hasQualifier = true; // c-number is always a qualifier
         } else {
             matcher = PLAIN_PATTERN.matcher(project.getVersion());
             if (matcher.matches()) {
