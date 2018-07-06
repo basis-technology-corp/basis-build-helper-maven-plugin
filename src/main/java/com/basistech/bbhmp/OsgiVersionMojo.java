@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
  * Basis convention of x.y.z.cXX.Y{-SNAPSHOT}. So, we deal with the following cases:
  * x.y.z(.qualifier)(-SNAPSHOT) [where a qualifier is a sequence of alphanumeric characters, '_' or '-']
  * x.y.z.cXX.Y(-SNAPSHOT)
+ * x.y.z.cXX.Y(qualifier including -SNAPSHOT)
  * Anything else is an error.
  *
  */
@@ -89,7 +90,7 @@ public class OsgiVersionMojo extends AbstractMojo {
                     patch == null ? "0" : patch,
                     qualifier == null ? "" : qualifier);
             } else {
-                throw new MojoExecutionException(String.format("Version %s does not match either x.y.z, x.y.z.cXX.Y, or x.y.z.<qualifier>",
+                throw new MojoExecutionException(String.format("Version %s does not match either x.y.z, x.y.z.cXX.Y(<qualifier>), or x.y.z.<qualifier>",
                     project.getVersion()));
             }
         }
