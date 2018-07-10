@@ -35,8 +35,7 @@ import java.util.regex.Pattern;
  * Transform a maven version to an OSGi version, dealing, as needed, with the
  * Basis convention of x.y.z.cXX.Y{-SNAPSHOT}. So, we deal with the following cases:
  * x.y.z(.qualifier)(-SNAPSHOT) [where a qualifier is a sequence of alphanumeric characters, '_' or '-']
- * x.y.z.cXX.Y(-SNAPSHOT)
- * x.y.z.cXX.Y(qualifier including -SNAPSHOT)
+ * x.y.z.cXX.Y(qualifier)
  * Anything else is an error.
  *
  */
@@ -55,7 +54,7 @@ public class OsgiVersionMojo extends AbstractMojo {
     /**
      * Whether to attach a timestamp as a qualifier to the OSGi version.
      * If this parameter is false, then the qualifier is a timestamp for a snapshot,
-     * blank for a release. If this parameter is true, then the qualifier is always filled in with a
+     * unmodified for a release. If this parameter is true, then the qualifier is added with a
      * timestamp.
      */
     @Parameter(defaultValue = "false")
