@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>bbh-maven-plugin</artifactId>
-    <version>2.0.10-SNAPSHOT</version>
+    <version>2.0.10</version>
     <packaging>maven-plugin</packaging>
     <parent>
         <artifactId>open-source-parent</artifactId>
@@ -20,7 +20,7 @@
         <connection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:basis-technology-corp/basis-build-helper-maven-plugin.git
         </developerConnection>
-        <tag>HEAD</tag>
+        <tag>bbh-maven-plugin-2.0.10</tag>
     </scm>
     <distributionManagement>
         <site>
