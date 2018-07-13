@@ -160,8 +160,12 @@ public class RosapiBundleCollectorMojo extends AbstractMojo {
         // do we need others?
         additional.put("project.version", project.getVersion());
 
-        interpolator = FixedStringSearchInterpolator.create(new PropertiesBasedValueSource(project.getProperties()),
-                new PropertiesBasedValueSource(additional));
+        // set up interpolator with project properties while applying overrides found in system properties first.
+        interpolator = FixedStringSearchInterpolator.create(
+            new PropertiesBasedValueSource(System.getProperties()), // system properties (override) first
+            new PropertiesBasedValueSource(project.getProperties()),
+            new PropertiesBasedValueSource(additional)
+        );
 
         processInputs();
 
