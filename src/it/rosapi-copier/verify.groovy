@@ -1,10 +1,12 @@
-assert(new File("target/it/rosapi-copier/target/bundles").listFiles().length == 4)
-assert(new File("target/it/rosapi-copier/target/bundles/commons-io-commons-io-2.4.jar").exists())
-assert(new File("target/it/rosapi-copier/target/bundles/commons-io-commons-io-2.5.jar").exists())
-assert(new File("target/it/rosapi-copier/target/bundles/bundles.xml").exists())
-assert(new File("target/it/rosapi-copier/target/bundles/com.google.inject.extensions-guice-throwingproviders-4.0.jar").exists())
+def path = 'target/it/rosapi-copier/target/bundles'
 
-def spec = new XmlSlurper().parse(new File("target/it/rosapi-copier/target/bundles/bundles.xml"))
+assert(new File(path).listFiles().length == 4)
+assert(new File(path, "commons-io-commons-io-2.4.jar").exists())
+assert(new File(path, "commons-io-commons-io-2.5.jar").exists())
+assert(new File(path, "bundles.xml").exists())
+assert(new File(path, "com.google.inject.extensions-guice-throwingproviders-4.0.jar").exists())
+
+def spec = new XmlSlurper().parse(new File(path, "bundles.xml"))
 spec.'*'.find { level ->
     if (level.@level == 1) {
         // 2 bundles
