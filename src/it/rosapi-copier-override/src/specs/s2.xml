@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<bundles>
+    <level level="1">
+        <bundle>commons-io/commons-io/-dependency-</bundle>
+        <bundle>com.google.inject.extensions/guice-throwingproviders/4.0</bundle>
+    </level>
+    <level level="2">
+        <bundle>com.google.inject.extensions/guice-throwingproviders/4.0</bundle>
+    </level>
+</bundles>
