@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * Transform a maven version to an OSGi version, dealing, as needed, with the
  * Basis convention of x.y.z.cXX.Y{-SNAPSHOT}. So, we deal with the following cases:
- * x.y.z(.qualifier)(-SNAPSHOT) [where a qualifier is a sequence of alphanumeric characters, '_' or '-']
+ * x.y.z(.qualifier)(-SNAPSHOT) [where a qualifier is a sequence of alphanumeric characters, '.', '_', or '-']
  * x.y.z.cXX.Y(qualifier)
  * Anything else is an error.
  *
@@ -44,8 +44,8 @@ public class OsgiVersionMojo extends AbstractMojo {
 
     // Matches valid OSGi versions with an optional '-SNAPSHOT' suffix
     // (note that for the "qualifier" group we deliberately include the leading period)
-    private static final Pattern PLAIN_PATTERN = Pattern.compile("(?<major>[0-9]+)(\\.(?<minor>[0-9]+)(\\.(?<patch>[0-9]+)(?<qualifier>\\.[\\p{Alnum}_-]+?)?)?)?(-SNAPSHOT)?");
-    private static final Pattern CXX_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+\\.[0-9]+\\.c[0-9]+)\\.([0-9]+[\\p{Alnum}_-]*)");
+    private static final Pattern PLAIN_PATTERN = Pattern.compile("(?<major>[0-9]+)(\\.(?<minor>[0-9]+)(\\.(?<patch>[0-9]+)(?<qualifier>\\.[\\p{Alnum}._-]+?)?)?)?(-SNAPSHOT)?");
+    private static final Pattern CXX_PATTERN = Pattern.compile("([0-9]+\\.[0-9]+\\.[0-9]+\\.c[0-9]+)\\.([0-9]+[\\p{Alnum}._-]*)");
     private static final String TIMESTAMP_PATTERN = "'v'yyyyMMddhhmmss";
 
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
