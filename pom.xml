@@ -30,7 +30,7 @@
     </distributionManagement>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven-version>3.2.1</maven-version>
+        <maven-version>3.8.1</maven-version>
         <bt.java.source>1.7</bt.java.source>
         <bt.java.target>1.7</bt.java.target>
         <!-- hopeless in a maven plugin -->
